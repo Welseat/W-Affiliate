@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welseat - Master Admin Control Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans">
+
+    <!-- Navigation Header -->
+    <nav class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center font-black text-slate-950 text-xl shadow-lg shadow-amber-500/20">W</div>
+                <div>
+                    <h1 class="font-bold text-lg text-white leading-tight">WELSEAT MASTER ADMIN</h1>
+                    <p class="text-xs text-amber-500 font-semibold tracking-wide">PARTNERS, LEADS & COMMISSION CONTROL</p>
+                </div>
+            </div>
+            <div class="text-xs text-slate-400 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl">
+                <i class="fa-solid fa-user-shield text-amber-400 mr-1.5"></i> Admin Access Only
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
+
+        <!-- Admin Navigation Tabs -->
+        <div class="flex bg-slate-900 p-1.5 rounded-2xl border border-slate-800 max-w-md">
+            <button onclick="switchAdminTab('leads')" id="tabLeads" class="w-1/2 py-2.5 text-xs font-bold rounded-xl transition bg-amber-500 text-slate-950">
+                <i class="fa-solid fa-list-check mr-1.5"></i> Referral Leads
+            </button>
+            <button onclick="switchAdminTab('partners')" id="tabPartners" class="w-1/2 py-2.5 text-xs font-bold rounded-xl transition text-slate-400 hover:text-white">
+                <i class="fa-solid fa-users mr-1.5"></i> Partners & Bank Accounts
+            </button>
+        </div>
+
+        <!-- System Summary Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                <p class="text-xs text-slate-400">Total System Leads</p>
+                <h3 id="statTotalLeads" class="text-2xl font-black text-white mt-1">0</h3>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                <p class="text-xs text-slate-400">Registered Partners</p>
+                <h3 id="statTotalPartners" class="text-2xl font-black text-amber-400 mt-1">0</h3>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                <p class="text-xs text-slate-400">Closed Orders</p>
+                <h3 id="statClosedLeads" class="text-2xl font-black text-emerald-400 mt-1">0</h3>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                <p class="text-xs text-slate-400">Total Payout Disbursed</p>
+                <h3 id="statTotalCommission" class="text-2xl font-black text-sky-400 mt-1">₹0</h3>
+            </div>
+        </div>
+
+        <!-- SECTION 1: LEADS & EDITABLE COMMISSION TABLE -->
+        <div id="sectionLeads" class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
+            <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950/50">
+                <h3 class="font-bold text-sm text-slate-200 flex items-center gap-2">
+                    <i class="fa-solid fa-database text-amber-500"></i> Referral Inquiries & Editable Commission
+                </h3>
+                <div class="flex gap-2">
+                    <button onclick="exportLeads()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition">Export CSV</button>
+                    <button onclick="clearAllData()" class="bg-red-500/10 text-red-400 text-xs font-semibold px-3 py-1.5 rounded-xl border border-red-500/30">Clear Leads</button>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-slate-300">
+                    <thead class="bg-slate-950 text-slate-400 uppercase tracking-wider text-[10px]">
+                        <tr>
+                            <th class="p-3.5">Lead ID / Date</th>
+                            <th class="p-3.5">Verified Partner</th>
+                            <th class="p-3.5">Client Details</th>
+                            <th class="p-3.5">Service Details</th>
+                            <th class="p-3.5">Est. Value (₹)</th>
+                            <th class="p-3.5">Edit Commission (₹)</th>
+                            <th class="p-3.5">Order Status</th>
+                            <th class="p-3.5">Payout Status</th>
+                            <th class="p-3.5 text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminTableBody" class="divide-y divide-slate-800">
+                        <!-- Dynamic Rows -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- SECTION 2: PARTNERS DIRECTORY -->
+        <div id="sectionPartners" class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl hidden">
+            <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950/50">
+                <h3 class="font-bold text-sm text-slate-200 flex items-center gap-2">
+                    <i class="fa-solid fa-id-card text-amber-500"></i> Registered Partners Directory & Bank Details
+                </h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-slate-300">
+                    <thead class="bg-slate-950 text-slate-400 uppercase tracking-wider text-[10px]">
+                        <tr>
+                            <th class="p-3.5">Partner Name</th>
+                            <th class="p-3.5">WhatsApp Mobile</th>
+                            <th class="p-3.5">Passcode</th>
+                            <th class="p-3.5">UPI ID</th>
+                            <th class="p-3.5">Bank Details</th>
+                            <th class="p-3.5 text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="partnersTableBody" class="divide-y divide-slate-800">
+                        <!-- Dynamic Rows -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let leads = [];
+        let partners = {};
+
+        function switchAdminTab(tab) {
+            if (tab === 'leads') {
+                document.getElementById('sectionLeads').classList.remove('hidden');
+                document.getElementById('sectionPartners').classList.add('hidden');
+                document.getElementById('tabLeads').className = "w-1/2 py-2.5 text-xs font-bold rounded-xl transition bg-amber-500 text-slate-950";
+                document.getElementById('tabPartners').className = "w-1/2 py-2.5 text-xs font-bold rounded-xl transition text-slate-400 hover:text-white";
+            } else {
+                document.getElementById('sectionPartners').classList.remove('hidden');
+                document.getElementById('sectionLeads').classList.add('hidden');
+                document.getElementById('tabPartners').className = "w-1/2 py-2.5 text-xs font-bold rounded-xl transition bg-amber-500 text-slate-950";
+                document.getElementById('tabLeads').className = "w-1/2 py-2.5 text-xs font-bold rounded-xl transition text-slate-400 hover:text-white";
+                renderPartnersDirectory();
+            }
+        }
+
+        function renderAdminDashboard() {
+            leads = JSON.parse(localStorage.getItem('welseatLeads')) || [];
+            partners = JSON.parse(localStorage.getItem('welseatPartners')) || {};
+
+            const tbody = document.getElementById('adminTableBody');
+            tbody.innerHTML = '';
+
+            let pendingCount = 0;
+            let closedCount = 0;
+            let totalCommissionPaid = 0;
+
+            if (leads.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center p-8 text-slate-500">System me koi lead submitted nahi hai.</td></tr>`;
+            } else {
+                leads.forEach((lead, index) => {
+                    if (lead.status === 'Pending') pendingCount++;
+                    if (lead.status === 'Closed') closedCount++;
+                    if (lead.payoutStatus === 'Paid') totalCommissionPaid += parseFloat(lead.commission || 0);
+
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-800/50 transition";
+                    tr.innerHTML = `
+                        <td class="p-3.5">
+                            <span class="font-bold text-amber-400">${lead.id}</span>
+                            <div class="text-[10px] text-slate-500">${lead.date}</div>
+                        </td>
+                        <td class="p-3.5">
+                            <div class="font-semibold text-white">${lead.partnerName}</div>
+                            <a href="https://wa.me/91${lead.partnerPhone}" target="_blank" class="text-[11px] text-emerald-400 hover:underline"><i class="fa-brands fa-whatsapp"></i> ${lead.partnerPhone}</a>
+                        </td>
+                        <td class="p-3.5">
+                            <div class="font-semibold text-white">${lead.clientContactPerson}</div>
+                            <div class="text-[11px] text-slate-400">${lead.clientCompany} (${lead.clientPhone})</div>
+                        </td>
+                        <td class="p-3.5">
+                            <div>${lead.serviceType}</div>
+                            <div class="text-[11px] text-amber-500 font-bold">${lead.chairQty} Chairs</div>
+                        </td>
+                        <td class="p-3.5 font-bold text-white">
+                            ₹${lead.estimatedVal}
+                        </td>
+                        <td class="p-3.5">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-slate-400">₹</span>
+                                <input type="number" id="commInput_${index}" value="${lead.commission}" class="w-20 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-xs text-emerald-400 font-bold focus:outline-none focus:border-amber-500">
+                                <button onclick="saveCommission(${index})" title="Save Commission Amount" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-2 py-1 rounded-lg text-xs transition">
+                                    <i class="fa-solid fa-floppy-disk"></i>
+                                </button>
+                            </div>
+                        </td>
+                        <td class="p-3.5">
+                            <select onchange="updateLeadStatus(${index}, this.value)" class="bg-slate-950 border border-slate-700 text-xs rounded-lg px-2 py-1 focus:outline-none text-amber-400 font-bold">
+                                <option value="Pending" ${lead.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                                <option value="Contacted" ${lead.status === 'Contacted' ? 'selected' : ''}>Contacted</option>
+                                <option value="In Progress" ${lead.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                                <option value="Closed" ${lead.status === 'Closed' ? 'selected' : ''}>Closed (Earned)</option>
+                                <option value="Rejected" ${lead.status === 'Rejected' ? 'selected' : ''}>Rejected</option>
+                            </select>
+                        </td>
+                        <td class="p-3.5">
+                            <button onclick="togglePayout(${index})" class="px-2.5 py-1 rounded text-[11px] font-bold border transition ${lead.payoutStatus === 'Paid' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' : 'bg-red-500/20 text-red-400 border-red-500/40'}">
+                                ${lead.payoutStatus === 'Paid' ? 'Paid ✓' : 'Mark Paid'}
+                            </button>
+                        </td>
+                        <td class="p-3.5 text-center">
+                            <button onclick="deleteLead(${index})" class="text-red-400 hover:text-red-300 p-1.5"><i class="fa-solid fa-trash-can"></i></button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            document.getElementById('statTotalLeads').innerText = leads.length;
+            document.getElementById('statTotalPartners').innerText = Object.keys(partners).length;
+            document.getElementById('statClosedLeads').innerText = closedCount;
+            document.getElementById('statTotalCommission').innerText = '₹' + totalCommissionPaid;
+        }
+
+        // SAVE CUSTOM COMMISSION FEATURE
+        function saveCommission(index) {
+            const newCommVal = parseFloat(document.getElementById(`commInput_${index}`).value);
+            if (isNaN(newCommVal) || newCommVal < 0) {
+                alert("Kripya sahi commission amount dalein.");
+                return;
+            }
+
+            leads[index].commission = newCommVal;
+            localStorage.setItem('welseatLeads', JSON.stringify(leads));
+            alert(`✅ Commission amount updated to ₹${newCommVal} for Lead ID: ${leads[index].id}`);
+            renderAdminDashboard();
+        }
+
+        function renderPartnersDirectory() {
+            partners = JSON.parse(localStorage.getItem('welseatPartners')) || {};
+            const tbody = document.getElementById('partnersTableBody');
+            tbody.innerHTML = '';
+
+            const partnerKeys = Object.keys(partners);
+
+            if (partnerKeys.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-slate-500">Koi partner registered nahi hai.</td></tr>`;
+            } else {
+                partnerKeys.forEach(phone => {
+                    const p = partners[phone];
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-800/50 transition";
+                    tr.innerHTML = `
+                        <td class="p-3.5 font-bold text-white">${p.name}</td>
+                        <td class="p-3.5 font-mono text-emerald-400">${p.phone}</td>
+                        <td class="p-3.5 font-mono text-amber-400 font-bold bg-slate-950 px-2 py-1 rounded border border-slate-800">${p.pin}</td>
+                        <td class="p-3.5 font-semibold text-amber-400">${p.upi || 'Not Added'}</td>
+                        <td class="p-3.5 text-slate-300 space-y-0.5">
+                            <div><span class="text-slate-500">Holder:</span> <span class="font-semibold text-white">${p.accHolder || 'Not Added'}</span></div>
+                            <div><span class="text-slate-500">Bank:</span> ${p.bankName || 'Not Added'}</div>
+                            <div><span class="text-slate-500">Acc No:</span> <span class="font-mono text-amber-300">${p.accNo || 'Not Added'}</span> | <span class="text-slate-500">IFSC:</span> <span class="font-mono">${p.ifsc || 'Not Added'}</span></div>
+                        </td>
+                        <td class="p-3.5 text-center">
+                            <button onclick="deletePartner('${phone}')" class="text-red-400 hover:text-red-300"><i class="fa-solid fa-trash-can"></i></button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+
+        function updateLeadStatus(index, status) {
+            leads[index].status = status;
+            localStorage.setItem('welseatLeads', JSON.stringify(leads));
+            renderAdminDashboard();
+        }
+
+        function togglePayout(index) {
+            leads[index].payoutStatus = leads[index].payoutStatus === 'Paid' ? 'Unpaid' : 'Paid';
+            localStorage.setItem('welseatLeads', JSON.stringify(leads));
+            renderAdminDashboard();
+        }
+
+        function deleteLead(index) {
+            if (confirm("Kya aap is lead ko delete karna chahte hain?")) {
+                leads.splice(index, 1);
+                localStorage.setItem('welseatLeads', JSON.stringify(leads));
+                renderAdminDashboard();
+            }
+        }
+
+        function deletePartner(phone) {
+            if (confirm(`Kya aap partner (${phone}) ko delete karna chahte hain?`)) {
+                delete partners[phone];
+                localStorage.setItem('welseatPartners', JSON.stringify(partners));
+                renderPartnersDirectory();
+                renderAdminDashboard();
+            }
+        }
+
+        function clearAllData() {
+            if (confirm("Warning: Sabhi leads delete ho jayengi!")) {
+                localStorage.removeItem('welseatLeads');
+                renderAdminDashboard();
+            }
+        }
+
+        function exportLeads() {
+            if(leads.length === 0) { alert("Data khali hai."); return; }
+            let csv = 'ID,Date,Partner,Partner Phone,Client,Client Phone,Company,Service,Qty,Value,Commission,Lead Status,Payout Status\n';
+            leads.forEach(l => {
+                csv += `${l.id},${l.date},"${l.partnerName}",${l.partnerPhone},"${l.clientContactPerson}",${l.clientPhone},"${l.clientCompany}",${l.serviceType},${l.chairQty},${l.estimatedVal},${l.commission},${l.status},${l.payoutStatus}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('href', url);
+            a.setAttribute('download', 'Welseat_Master_Leads.csv');
+            a.click();
+        }
+
+        renderAdminDashboard();
+    </script>
+</body>
+</html>
