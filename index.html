@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welseat - Secure Partner Portal & Wallet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans">
+
+    <!-- Navigation Header -->
+    <nav class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center font-black text-slate-950 text-xl shadow-lg shadow-amber-500/20">W</div>
+                <div>
+                    <h1 class="font-bold text-lg text-white leading-tight">WELSEAT</h1>
+                    <p class="text-xs text-amber-500 font-semibold tracking-wide">SECURE PARTNER PORTAL</p>
+                </div>
+            </div>
+            <div id="loggedInUserBadge" class="hidden flex items-center gap-3">
+                <span class="text-xs bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl text-slate-300">
+                    <i class="fa-solid fa-user-shield text-emerald-400 mr-1.5"></i> <span id="displayPartnerName"></span> (<span id="displayPartnerPhone"></span>)
+                </span>
+                <button onclick="logoutPartner()" class="text-xs text-red-400 hover:text-red-300 bg-red-500/10 px-3 py-1.5 rounded-xl border border-red-500/20 font-semibold">
+                    <i class="fa-solid fa-right-from-bracket mr-1"></i> Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- AUTHENTICATION FORM (LOGIN & REGISTER) -->
+    <div id="authContainer" class="max-w-md mx-auto my-10 p-6 bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl space-y-6">
+        <div class="flex bg-slate-950 p-1 rounded-2xl border border-slate-800">
+            <button onclick="switchAuthTab('login')" id="tabLogin" class="w-1/2 py-2 text-xs font-bold rounded-xl transition bg-amber-500 text-slate-950">
+                <i class="fa-solid fa-lock mr-1"></i> Secure Login
+            </button>
+            <button onclick="switchAuthTab('register')" id="tabRegister" class="w-1/2 py-2 text-xs font-bold rounded-xl transition text-slate-400 hover:text-white">
+                <i class="fa-solid fa-user-plus mr-1"></i> New Registration
+            </button>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+            <div class="text-center space-y-1">
+                <h3 class="text-lg font-bold text-white">Partner Sign In</h3>
+                <p class="text-xs text-slate-400">Apne registered mobile number aur secret passcode se login karein.</p>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">WhatsApp Mobile Number</label>
+                <input type="tel" id="loginPhone" maxlength="10" required placeholder="10 Digit Number" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500 tracking-wider font-mono">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Apna Secret Passcode (PIN)</label>
+                <input type="password" id="loginPin" required placeholder="••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500 tracking-widest">
+            </div>
+            <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl text-xs transition shadow-lg shadow-amber-500/20">
+                <i class="fa-solid fa-shield-halved mr-1"></i> Secure Login To Wallet
+            </button>
+        </form>
+
+        <!-- REGISTER FORM -->
+        <form id="registerForm" onsubmit="handleRegister(event)" class="space-y-4 hidden">
+            <div class="text-center space-y-1">
+                <h3 class="text-lg font-bold text-white">Create Partner Account</h3>
+                <p class="text-xs text-slate-400">Apni details enter karein. Bank details baad me bhi add kar sakte hain.</p>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Aapka Poora Naam *</label>
+                <input type="text" id="regName" required placeholder="Ex: Rahul Sharma" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">WhatsApp Mobile Number *</label>
+                <input type="tel" id="regPhone" maxlength="10" required placeholder="10 Digit Number" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-amber-500 tracking-wider font-mono">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Passcode / Password Banayein *</label>
+                <input type="password" id="regPin" minlength="4" required placeholder="Ex: 123456" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-amber-500 tracking-widest">
+            </div>
+
+            <!-- Optional Payout Details -->
+            <div class="p-3 bg-slate-950 rounded-xl border border-slate-800/80 space-y-3">
+                <h4 class="text-[11px] font-bold text-amber-500 uppercase tracking-wider">Payout Details <span class="text-slate-500 font-normal lowercase">(Optional)</span></h4>
+                <div>
+                    <label class="block text-[11px] font-medium text-slate-400 mb-1">UPI ID</label>
+                    <input type="text" id="regUpi" placeholder="Ex: username@upi" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[11px] font-medium text-slate-400 mb-1">A/C Holder Name</label>
+                        <input type="text" id="regAccHolder" placeholder="A/C Holder Name" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-medium text-slate-400 mb-1">Bank Name</label>
+                        <input type="text" id="regBankName" placeholder="Bank Name" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[11px] font-medium text-slate-400 mb-1">Account Number</label>
+                        <input type="text" id="regAccNo" placeholder="Account Number" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-medium text-slate-400 mb-1">IFSC Code</label>
+                        <input type="text" id="regIfsc" placeholder="IFSC Code" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500">
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl text-xs transition shadow-lg shadow-emerald-600/20">
+                <i class="fa-solid fa-user-check mr-1"></i> Create Partner Account
+            </button>
+        </form>
+    </div>
+
+    <!-- PRIVATE PARTNER DASHBOARD -->
+    <div id="dashboardContainer" class="hidden max-w-7xl mx-auto p-4 md:p-6 space-y-6">
+        
+        <!-- Wallet Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-gradient-to-br from-slate-900 to-amber-950/40 border border-amber-500/30 p-5 rounded-3xl relative overflow-hidden">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs text-amber-400 font-semibold uppercase tracking-wider">Aapka Total Earned</p>
+                        <h3 id="myTotalEarned" class="text-3xl font-black text-white mt-1">₹0</h3>
+                    </div>
+                    <div class="w-10 h-10 bg-amber-500/20 rounded-xl flex items-center justify-center text-amber-400 text-lg"><i class="fa-solid fa-wallet"></i></div>
+                </div>
+            </div>
+            <div class="bg-gradient-to-br from-slate-900 to-emerald-950/40 border border-emerald-500/30 p-5 rounded-3xl relative overflow-hidden">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs text-emerald-400 font-semibold uppercase tracking-wider">Paid Payouts</p>
+                        <h3 id="myPaidOut" class="text-3xl font-black text-white mt-1">₹0</h3>
+                    </div>
+                    <div class="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center text-emerald-400 text-lg"><i class="fa-solid fa-circle-check"></i></div>
+                </div>
+            </div>
+            <div class="bg-gradient-to-br from-slate-900 to-sky-950/40 border border-sky-500/30 p-5 rounded-3xl relative overflow-hidden">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs text-sky-400 font-semibold uppercase tracking-wider">Pending Balance</p>
+                        <h3 id="myPending" class="text-3xl font-black text-white mt-1">₹0</h3>
+                    </div>
+                    <div class="w-10 h-10 bg-sky-500/20 rounded-xl flex items-center justify-center text-sky-400 text-lg"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Submit Lead Form -->
+            <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-6">
+                <div class="flex items-center gap-2 border-b border-slate-800 pb-4">
+                    <i class="fa-solid fa-paper-plane text-amber-500 text-xl"></i>
+                    <h3 class="text-lg font-bold text-white">Submit New Referral Lead</h3>
+                </div>
+
+                <form id="leadForm" onsubmit="submitLead(event)" class="space-y-4">
+                    <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800/80 space-y-4">
+                        <h4 class="text-xs font-bold text-amber-500 uppercase tracking-wider">1. Verified Partner Account</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1">Partner Name</label>
+                                <input type="text" id="partnerNameInput" readonly class="w-full bg-slate-900/50 border border-slate-800 text-slate-300 rounded-xl px-3 py-2 text-xs font-semibold">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1">WhatsApp Number</label>
+                                <input type="tel" id="partnerPhoneInput" readonly class="w-full bg-slate-900/50 border border-slate-800 text-slate-400 rounded-xl px-3 py-2 text-xs font-mono">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800/80 space-y-4">
+                        <h4 class="text-xs font-bold text-amber-500 uppercase tracking-wider">2. Client Details (Kisko Chair Chahiye?)</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1">Client Name / Person <span class="text-red-500">*</span></label>
+                                <input type="text" id="clientContactPerson" required placeholder="Ex: Amit Varma" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1">Client Mobile Number <span class="text-red-500">*</span></label>
+                                <input type="tel" id="clientPhone" required placeholder="9876543210" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1">Company Name <span class="text-slate-500">(Optional)</span></label>
+                                <input type="text" id="clientCompany" placeholder="Ex: Tech Mahindra" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1">Location <span class="text-slate-500">(Optional)</span></label>
+                                <select id="clientLocation" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+                                    <option value="Not Specified">Select Location</option>
+                                    <option value="Delhi">Delhi</option>
+                                    <option value="Noida">Noida</option>
+                                    <option value="Gurgaon">Gurgaon</option>
+                                    <option value="Ghaziabad">Ghaziabad</option>
+                                    <option value="Faridabad">Faridabad</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800/80 space-y-4">
+                        <h4 class="text-xs font-bold text-amber-500 uppercase tracking-wider">3. Requirement Details <span class="text-slate-500 lowercase">(Optional)</span></h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1">Service Type</label>
+                                <select id="serviceType" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+                                    <option value="General Inquiry">General / Not Sure</option>
+                                    <option value="New Chairs Purchase">New Office Chairs</option>
+                                    <option value="Chair Repairing">Chair Repairing Services</option>
+                                    <option value="Parts Replacement">Hydraulic/Wheels/Parts</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1">Quantity (Approx)</label>
+                                <input type="number" id="chairQty" min="1" placeholder="Ex: 5" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1">Estimated Value (₹)</label>
+                                <input type="number" id="estimatedVal" min="500" placeholder="Ex: 10000" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-xl text-sm shadow-lg shadow-emerald-600/20 transition-all flex items-center justify-center gap-2">
+                        <i class="fa-brands fa-whatsapp text-lg"></i> Submit Lead & Open WhatsApp
+                    </button>
+                </form>
+            </div>
+
+            <!-- Saved Bank Details & Edit Modal Trigger -->
+            <div class="space-y-6">
+                <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-building-columns text-amber-500"></i> Payout / Bank Account
+                        </h3>
+                        <button onclick="openBankModal()" class="text-xs text-amber-400 hover:underline font-bold">
+                            <i class="fa-solid fa-pen-to-square"></i> Edit
+                        </button>
+                    </div>
+                    <div class="text-xs space-y-2 text-slate-300">
+                        <div><span class="text-slate-500">UPI ID:</span> <span id="dashUpi" class="font-bold text-amber-400">Not Added</span></div>
+                        <div class="border-t border-slate-800/60 pt-2 space-y-1">
+                            <div><span class="text-slate-500">A/C Holder:</span> <span id="dashAccHolder" class="font-bold text-slate-200">Not Added</span></div>
+                            <div><span class="text-slate-500">Bank Name:</span> <span id="dashBankName" class="font-bold text-slate-200">Not Added</span></div>
+                            <div><span class="text-slate-500">Account No:</span> <span id="dashAccNo" class="font-bold font-mono text-slate-200">Not Added</span></div>
+                            <div><span class="text-slate-500">IFSC Code:</span> <span id="dashIfsc" class="font-bold font-mono text-slate-200">Not Added</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6">
+                    <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-hand-holding-dollar text-amber-500"></i> Commission Rates
+                    </h3>
+                    <div class="space-y-3 text-xs text-slate-300">
+                        <div class="flex justify-between p-3 bg-slate-950 rounded-xl border border-slate-800">
+                            <span>Chair Repairing</span>
+                            <span class="font-bold text-amber-400">Up To 10%</span>
+                        </div>
+                        <div class="flex justify-between p-3 bg-slate-950 rounded-xl border border-slate-800">
+                            <span>Bulk Repairs</span>
+                            <span class="font-bold text-amber-400">Up To 12%</span>
+                        </div>
+                        <div class="flex justify-between p-3 bg-slate-950 rounded-xl border border-slate-800">
+                            <span>New Chair Orders</span>
+                            <span class="font-bold text-amber-400">Up To 15%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lead History Table -->
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-xl">
+            <div class="p-4 border-b border-slate-800 flex justify-between items-center">
+                <h3 class="font-bold text-sm text-white flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-amber-500"></i> Aapki Private Leads & Status
+                </h3>
+                <button onclick="loadMyPrivateData()" class="text-xs text-amber-400 hover:underline flex items-center gap-1">
+                    <i class="fa-solid fa-arrows-rotate"></i> Refresh
+                </button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-slate-300">
+                    <thead class="bg-slate-950 text-slate-400 uppercase tracking-wider text-[10px]">
+                        <tr>
+                            <th class="p-3.5">Lead ID / Date</th>
+                            <th class="p-3.5">Client Person</th>
+                            <th class="p-3.5">Service Details</th>
+                            <th class="p-3.5">Est. Commission</th>
+                            <th class="p-3.5">Live Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="myLeadsTableBody" class="divide-y divide-slate-800">
+                        <!-- Dynamic Rows -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- UPDATE BANK DETAILS MODAL (POPUP) -->
+    <div id="bankModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="text-sm font-bold text-white"><i class="fa-solid fa-pen-to-square text-amber-500 mr-1.5"></i> Update Payout & Bank Details</h3>
+                <button onclick="closeBankModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="saveBankDetails(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">UPI ID</label>
+                    <input type="text" id="modalUpi" placeholder="Ex: name@upi" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">A/C Holder Name</label>
+                    <input type="text" id="modalAccHolder" placeholder="Ex: Rahul Sharma" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Bank Name</label>
+                    <input type="text" id="modalBankName" placeholder="Ex: State Bank of India" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Account Number</label>
+                    <input type="text" id="modalAccNo" placeholder="Ex: 123456789012" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">IFSC Code</label>
+                    <input type="text" id="modalIfsc" placeholder="Ex: SBIN0001234" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button type="button" onclick="closeBankModal()" class="w-1/2 bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-xl text-xs font-bold">Cancel</button>
+                    <button type="submit" class="w-1/2 bg-amber-500 hover:bg-amber-400 text-slate-950 py-2.5 rounded-xl text-xs font-bold">Save Details</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const ADMIN_WHATSAPP_NUMBER = "919576221561";
+        let currentSession = JSON.parse(sessionStorage.getItem('welseatPartnerSession')) || null;
+
+        if (currentSession) {
+            showDashboard();
+        }
+
+        function switchAuthTab(tab) {
+            if (tab === 'login') {
+                document.getElementById('loginForm').classList.remove('hidden');
+                document.getElementById('registerForm').classList.add('hidden');
+                document.getElementById('tabLogin').className = "w-1/2 py-2 text-xs font-bold rounded-xl transition bg-amber-500 text-slate-950";
+                document.getElementById('tabRegister').className = "w-1/2 py-2 text-xs font-bold rounded-xl transition text-slate-400 hover:text-white";
+            } else {
+                document.getElementById('registerForm').classList.remove('hidden');
+                document.getElementById('loginForm').classList.add('hidden');
+                document.getElementById('tabRegister').className = "w-1/2 py-2 text-xs font-bold rounded-xl transition bg-amber-500 text-slate-950";
+                document.getElementById('tabLogin').className = "w-1/2 py-2 text-xs font-bold rounded-xl transition text-slate-400 hover:text-white";
+            }
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            const name = document.getElementById('regName').value.trim();
+            const phone = document.getElementById('regPhone').value.trim();
+            const pin = document.getElementById('regPin').value.trim();
+
+            const upi = document.getElementById('regUpi').value.trim() || 'Not Added';
+            const accHolder = document.getElementById('regAccHolder').value.trim() || 'Not Added';
+            const bankName = document.getElementById('regBankName').value.trim() || 'Not Added';
+            const accNo = document.getElementById('regAccNo').value.trim() || 'Not Added';
+            const ifsc = document.getElementById('regIfsc').value.trim() || 'Not Added';
+
+            if (phone.length !== 10 || isNaN(phone)) {
+                alert("Kripya 10-digit sahi mobile number dalein.");
+                return;
+            }
+
+            let partners = JSON.parse(localStorage.getItem('welseatPartners')) || {};
+
+            if (partners[phone]) {
+                alert("Yeh mobile number pehle se registered hai!");
+                switchAuthTab('login');
+                return;
+            }
+
+            partners[phone] = { 
+                name: name, 
+                phone: phone, 
+                pin: pin, 
+                upi: upi, 
+                accHolder: accHolder,
+                bankName: bankName,
+                accNo: accNo,
+                ifsc: ifsc
+            };
+
+            localStorage.setItem('welseatPartners', JSON.stringify(partners));
+            currentSession = partners[phone];
+            sessionStorage.setItem('welseatPartnerSession', JSON.stringify(currentSession));
+
+            alert("✅ Account Successfully Created!");
+            showDashboard();
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const phone = document.getElementById('loginPhone').value.trim();
+            const pin = document.getElementById('loginPin').value.trim();
+
+            let partners = JSON.parse(localStorage.getItem('welseatPartners')) || {};
+
+            if (!partners[phone]) {
+                alert("Yeh mobile number registered nahi hai.");
+                return;
+            }
+
+            if (partners[phone].pin !== pin) {
+                alert("❌ Galat Passcode (PIN)!");
+                return;
+            }
+
+            currentSession = partners[phone];
+            sessionStorage.setItem('welseatPartnerSession', JSON.stringify(currentSession));
+            showDashboard();
+        }
+
+        function showDashboard() {
+            document.getElementById('authContainer').classList.add('hidden');
+            document.getElementById('dashboardContainer').classList.remove('hidden');
+            document.getElementById('loggedInUserBadge').classList.remove('hidden');
+            
+            document.getElementById('displayPartnerName').innerText = currentSession.name;
+            document.getElementById('displayPartnerPhone').innerText = currentSession.phone;
+            
+            document.getElementById('partnerNameInput').value = currentSession.name;
+            document.getElementById('partnerPhoneInput').value = currentSession.phone;
+
+            updateBankUI();
+            loadMyPrivateData();
+        }
+
+        function updateBankUI() {
+            document.getElementById('dashUpi').innerText = currentSession.upi || 'Not Added';
+            document.getElementById('dashAccHolder').innerText = currentSession.accHolder || 'Not Added';
+            document.getElementById('dashBankName').innerText = currentSession.bankName || 'Not Added';
+            document.getElementById('dashAccNo').innerText = currentSession.accNo || 'Not Added';
+            document.getElementById('dashIfsc').innerText = currentSession.ifsc || 'Not Added';
+        }
+
+        function openBankModal() {
+            document.getElementById('modalUpi').value = currentSession.upi !== 'Not Added' ? (currentSession.upi || '') : '';
+            document.getElementById('modalAccHolder').value = currentSession.accHolder !== 'Not Added' ? (currentSession.accHolder || '') : '';
+            document.getElementById('modalBankName').value = currentSession.bankName !== 'Not Added' ? (currentSession.bankName || '') : '';
+            document.getElementById('modalAccNo').value = currentSession.accNo !== 'Not Added' ? (currentSession.accNo || '') : '';
+            document.getElementById('modalIfsc').value = currentSession.ifsc !== 'Not Added' ? (currentSession.ifsc || '') : '';
+
+            document.getElementById('bankModal').classList.remove('hidden');
+        }
+
+        function closeBankModal() {
+            document.getElementById('bankModal').classList.add('hidden');
+        }
+
+        function saveBankDetails(e) {
+            e.preventDefault();
+            let partners = JSON.parse(localStorage.getItem('welseatPartners')) || {};
+
+            currentSession.upi = document.getElementById('modalUpi').value.trim() || 'Not Added';
+            currentSession.accHolder = document.getElementById('modalAccHolder').value.trim() || 'Not Added';
+            currentSession.bankName = document.getElementById('modalBankName').value.trim() || 'Not Added';
+            currentSession.accNo = document.getElementById('modalAccNo').value.trim() || 'Not Added';
+            currentSession.ifsc = document.getElementById('modalIfsc').value.trim() || 'Not Added';
+
+            partners[currentSession.phone] = currentSession;
+            localStorage.setItem('welseatPartners', JSON.stringify(partners));
+            sessionStorage.setItem('welseatPartnerSession', JSON.stringify(currentSession));
+
+            updateBankUI();
+            closeBankModal();
+            alert("✅ Bank & UPI details updated successfully!");
+        }
+
+        function logoutPartner() {
+            sessionStorage.removeItem('welseatPartnerSession');
+            location.reload();
+        }
+
+        function submitLead(event) {
+            event.preventDefault();
+            let allLeads = JSON.parse(localStorage.getItem('welseatLeads')) || [];
+
+            const clientContactPerson = document.getElementById('clientContactPerson').value;
+            const clientPhone = document.getElementById('clientPhone').value;
+            const clientCompany = document.getElementById('clientCompany').value || 'N/A';
+            const clientLocation = document.getElementById('clientLocation').value || 'Not Specified';
+            const serviceType = document.getElementById('serviceType').value || 'General Inquiry';
+            const chairQty = document.getElementById('chairQty').value || 'N/A';
+            const estVal = parseFloat(document.getElementById('estimatedVal').value) || 0;
+            const commission = Math.round(estVal * 0.10);
+
+            const newLead = {
+                id: 'WEL-' + Math.floor(1000 + Math.random() * 9000),
+                date: new Date().toLocaleDateString('en-IN'),
+                partnerName: currentSession.name,
+                partnerPhone: currentSession.phone,
+                clientCompany: clientCompany,
+                clientContactPerson: clientContactPerson,
+                clientPhone: clientPhone,
+                clientLocation: clientLocation,
+                serviceType: serviceType,
+                chairQty: chairQty,
+                estimatedVal: estVal,
+                commission: commission,
+                status: 'Pending',
+                payoutStatus: 'Unpaid'
+            };
+
+            allLeads.unshift(newLead);
+            localStorage.setItem('welseatLeads', JSON.stringify(allLeads));
+
+            const waMessage = `*NEW REFERRAL LEAD SUBMITTED* 🪑%0A%0A` +
+                `*Lead ID:* ${newLead.id}%0A` +
+                `*Partner Name:* ${currentSession.name}%0A` +
+                `*Verified Mobile:* ${currentSession.phone}%0A%0A` +
+                `*Client Name:* ${clientContactPerson}%0A` +
+                `*Client Mobile:* ${clientPhone}%0A` +
+                `*Company:* ${clientCompany}%0A` +
+                `*Location:* ${clientLocation}%0A%0A` +
+                `*Service:* ${serviceType}%0A` +
+                `*Quantity:* ${chairQty}%0A` +
+                `*Est. Value:* ₹${estVal}%0A` +
+                `*Est. Commission:* Up To ₹${commission}`;
+
+            document.getElementById('leadForm').reset();
+            document.getElementById('partnerNameInput').value = currentSession.name;
+            document.getElementById('partnerPhoneInput').value = currentSession.phone;
+            loadMyPrivateData();
+            window.location.href = `https://wa.me/${ADMIN_WHATSAPP_NUMBER}?text=${waMessage}`;
+        }
+
+        function loadMyPrivateData() {
+            const allLeads = JSON.parse(localStorage.getItem('welseatLeads')) || [];
+            const myLeads = allLeads.filter(l => l.partnerPhone === currentSession.phone);
+
+            const tbody = document.getElementById('myLeadsTableBody');
+            tbody.innerHTML = '';
+
+            let totalEarned = 0;
+            let paidOut = 0;
+            let pending = 0;
+
+            if (myLeads.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center p-6 text-slate-500">Aapki koi lead submit nahi hui hai.</td></tr>`;
+            } else {
+                myLeads.forEach(lead => {
+                    if (lead.status === 'Closed') {
+                        totalEarned += lead.commission;
+                        if (lead.payoutStatus === 'Paid') {
+                            paidOut += lead.commission;
+                        } else {
+                            pending += lead.commission;
+                        }
+                    } else if (lead.status !== 'Rejected') {
+                        pending += lead.commission;
+                    }
+
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-800/50 transition";
+                    tr.innerHTML = `
+                        <td class="p-3.5">
+                            <span class="font-bold text-amber-400">${lead.id}</span>
+                            <div class="text-[10px] text-slate-500">${lead.date}</div>
+                        </td>
+                        <td class="p-3.5 font-medium text-white">${lead.clientContactPerson}<br><span class="text-[11px] text-slate-400">${lead.clientPhone}</span></td>
+                        <td class="p-3.5">${lead.serviceType}<br><span class="text-[11px] text-amber-500 font-bold">${lead.chairQty} Qty</span></td>
+                        <td class="p-3.5 font-bold text-emerald-400">₹${lead.commission}</td>
+                        <td class="p-3.5">${getStatusBadge(lead.status, lead.payoutStatus)}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            document.getElementById('myTotalEarned').innerText = '₹' + totalEarned;
+            document.getElementById('myPaidOut').innerText = '₹' + paidOut;
+            document.getElementById('myPending').innerText = '₹' + pending;
+        }
+
+        function getStatusBadge(status, payoutStatus) {
+            if (status === 'Closed' && payoutStatus === 'Paid') return `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-1 rounded text-[10px] font-bold">Closed & Paid</span>`;
+            if (status === 'Closed') return `<span class="bg-sky-500/10 text-sky-400 border border-sky-500/30 px-2 py-1 rounded text-[10px] font-bold">Order Closed (Payout Pending)</span>`;
+            if (status === 'Rejected') return `<span class="bg-red-500/10 text-red-400 border border-red-500/30 px-2 py-1 rounded text-[10px] font-bold">Rejected</span>`;
+            return `<span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2 py-1 rounded text-[10px] font-bold">${status}</span>`;
+        }
+    </script>
+</body>
+</html>
